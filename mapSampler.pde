@@ -77,11 +77,22 @@ void drawLatestData() {
         Sample sample3 = samples.get(i + 2);
         
         PVector pixelPosition1 = map.getScreenLocation(sample1.position);
+        PVector pixelPosition2 = map.getScreenLocation(sample2.position);
         PVector pixelPosition3 = map.getScreenLocation(sample3.position);
         
-        stroke(255, 0, 0);
+        float angle = atan2(pixelPosition3.y - pixelPosition1.y, pixelPosition3.x - pixelPosition1.x);
+        float distance = PVector.dist(pixelPosition1, pixelPosition3);
+        
+        stroke(255, 255, 0);
         
         line(pixelPosition1.x, pixelPosition1.y, pixelPosition3.x, pixelPosition3.y);
+        
+        stroke(255, 0, 0, 30);
+        pushMatrix();
+        translate(pixelPosition2.x, pixelPosition2.y);
+        rotate(angle + HALF_PI);
+        line(0, 0, 1000, 0);
+        popMatrix();
     }
 }
 
