@@ -10,7 +10,7 @@ final String imageFolder = "mapSamplerPictures";
 
 MercatorMap map;
 DataStore data;
-Capture capture;
+Capturer capturer;
 
 PVector position;
 PVector accelerometer;
@@ -23,7 +23,7 @@ void setup() {
     noLoop();
     
     data = new DataStore("mapSamples", this);
-    capture = new Capture(data, this);
+//    capturer = new Capturer(data, this);
     
     map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
     mapBackground = loadImage("map-ciid.png");
@@ -33,7 +33,7 @@ void draw() {
     image(mapBackground, 0, 0);
     drawLatestData();
     
-    capture.draw();
+//    capturer.draw();
 }
 
 void drawLatestData() {
@@ -79,7 +79,23 @@ MercatorMap createMap(int w, int h, float leftLon, float bottomLat, float rightL
     return new MercatorMap(w, h, topLat, bottomLat, leftLon, rightLon);
 }
 
+void onCameraPreviewEvent() {
+    capturer.onCameraPreviewEvent();
+}
+
+void onClickWidget(APWidget widget) {
+    capturer.onClickWidget(widget);
+}
+
+void onAccelerometerEvent(float x, float y, float z, long time, int accuracy) {
+    capturer.onAccelerometerEvent(x, y, z, time, accuracy);
+}
+
+void onLocationEvent(double latitude, double longitude, double altitude) {
+    capturer.onLocationEvent(latitude, longitude, altitude);
+}
+
 void exit() {
-    capture.exit();
+    capturer.exit();
     super.exit();
 }

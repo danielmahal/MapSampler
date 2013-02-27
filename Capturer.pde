@@ -3,7 +3,7 @@ import apwidgets.*;
 import ketai.camera.*;
 import ketai.sensors.*;
 
-class Capture {
+class Capturer {
     DataStore data;
     KetaiSensor sensor;
     KetaiLocation location;
@@ -15,49 +15,24 @@ class Capture {
 
     boolean record = false;
 
-    Capture(DataStore dataStore, Context context) {
+    Capturer(DataStore dataStore, PApplet context) {
         data = dataStore;
         
         cam = new KetaiCamera(context, 1024, 768, 24);
-//        sensor = new KetaiSensor(context);
-//        location = new KetaiLocation(context);
+        sensor = new KetaiSensor(context);
+        location = new KetaiLocation(context);
 
         recordButton = new APToggleButton(10, 10, 100, 50, "Record"); 
         resetButton = new APButton(120, 10, 100, 50, "Reset");
 
-//        widgetContainer = new APWidgetContainer(context);
-//        widgetContainer.addWidget(recordButton); 
-//        widgetContainer.addWidget(resetButton);
+        widgetContainer = new APWidgetContainer(context);
+        widgetContainer.addWidget(recordButton); 
+        widgetContainer.addWidget(resetButton);
 
         sensor.start();
         cam.setSaveDirectory(imageFolder);
     }
-
-    boolean isRecording() {
-        boolean ready = position != null && accelerometer != null && cam.isStarted();
-        return record && ready;
-    }
-
-    void saveImage(String filename) {
-        if (cam.isStarted()) {
-            if (cam.savePhoto(filename)) {
-                println("Saved photo " + filename);
-            } 
-            else {
-                println("Could not save photo " + filename);
-            }
-        }
-    }
-
-    void startRecording() {
-        data.newSession();
-        record = true;
-    }
-
-    void stopRecording() {
-        record = false;
-    }
-
+    
     void draw() {
         drawStatusText();
 
@@ -96,6 +71,31 @@ class Capture {
         text("Status: " + status, 10, height - 10);
     }
 
+    boolean isRecording() {
+        boolean ready = position != null && accelerometer != null && cam.isStarted();
+        return record && ready;
+    }
+
+    void saveImage(String filename) {
+        if (cam.isStarted()) {
+            if (cam.savePhoto(filename)) {
+                println("Saved photo " + filename);
+            } 
+            else {
+                println("Could not save photo " + filename);
+            }
+        }
+    }
+
+    void startRecording() {
+        data.newSession();
+        record = true;
+    }
+
+    void stopRecording() {
+        record = false;
+    }
+
     void onCameraPreviewEvent() {
         cam.read();
     }
@@ -132,7 +132,9 @@ class Capture {
             data.store(id, position, accelerometer);
             saveImage(Integer.toString(id));
         }
-    }void exit() {
+    }
+    
+    void exit() {
         if (cam.isStarted()) {
             cam.stop();
         }
