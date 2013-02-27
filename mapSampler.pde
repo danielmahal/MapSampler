@@ -18,7 +18,7 @@ PVector position;
 PVector accelerometer;
 PImage mapBackground;
 
-boolean capturing = false;
+boolean capture = false;
 
 void setup() {
     size(displayWidth, displayHeight);
@@ -40,6 +40,16 @@ void setup() {
     widgetContainer.addWidget(resetButton); 
     
     sensor.start();
+    
+    printLatestData();
+}
+
+void printLatestData() {
+    data.db.query("SELECT * from " + data.table + " WHERE sessionId='" + data.sessionId + "'");
+    
+    while(data.db.next()) {
+        println("Sample from session " + data.sessionId + ": " + data.db.getFloat("latitude") + ", " + data.db.getFloat("longitude"));
+    }
 }
 
 void draw() {
@@ -56,9 +66,9 @@ void drawStatusText() {
     } else {
         status = "Not capturing data";
         
-        if(capturing && position == null) status += "\n" + "Waiting for position";
-        if(capturing && accelerometer == null) status += "\n" + "Waiting for accelerometer";
-        if(capturing && !cam.isStarted()) status += "\n" + "Waiting for camera";
+        if(capture && position == null) status += "\n" + "Waiting for position";
+        if(capture && accelerometer == null) status += "\n" + "Waiting for accelerometer";
+        if(capture && !cam.isStarted()) status += "\n" + "Waiting for camera";
     }
     
     fill(0);
@@ -70,7 +80,7 @@ void drawStatusText() {
 
 boolean isCapturing() {
     boolean captureReady = position != null && accelerometer != null/* && cam.isStarted()*/;
-    return capturing && captureReady;
+    return capture && captureReady;
 }
 
 MercatorMap createMap(int w, int h, float leftLon, float bottomLat, float rightLon, float topLat) {
@@ -105,11 +115,11 @@ void onClickWidget(APWidget widget) {
 
 void startCapturing() {
     data.newSession();
-    capturing = true;
+    capture = true;
 }
 
 void stopCapturing() {
-    capturing = false;
+    capture = false;
 }
 
 //void mousePressed() {
