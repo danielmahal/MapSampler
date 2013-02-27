@@ -3,7 +3,8 @@ import apwidgets.*;
 import ketai.camera.*;
 import ketai.sensors.*;
 
-// 12.536, 55.6970, 12.5496, 55.7015
+// map.png: 12.536, 55.6970, 12.5496, 55.7015
+// map-ciid.png: 12.5915,55.6820,12.6021,55.6855
 
 MercatorMap map;
 KetaiSensor sensor;
@@ -29,11 +30,12 @@ void setup() {
     size(displayWidth, displayHeight);
     frameRate(24);
     orientation(LANDSCAPE);
+    noLoop();
     
     data = new DataStore("mapSamples", this);
     cam = new KetaiCamera(this, 1024, 768, 24);
-    mapBackground = loadImage("map.png");
-    map = createMap(width, height, 12.536, 55.6970, 12.5496, 55.7015);
+    mapBackground = loadImage("map-ciid.png");
+    map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
     sensor = new KetaiSensor(this);
     location = new KetaiLocation(this);
      
@@ -41,8 +43,8 @@ void setup() {
     resetButton = new APButton(120, 10, 100, 50, "Reset");
     
     widgetContainer = new APWidgetContainer(this);
-    widgetContainer.addWidget(captureButton); 
-    widgetContainer.addWidget(resetButton);
+//    widgetContainer.addWidget(captureButton); 
+//    widgetContainer.addWidget(resetButton);
     
     sensor.start();
     cam.setSaveDirectory(imageFolder);
@@ -60,16 +62,56 @@ void printLatestData() {
 
 void draw() {
     image(mapBackground, 0, 0);
-    image(cam, 10, 70, 160, 120);
+//    image(cam, 10, 70, 160, 120);
+    drawLatestData();
     drawStatusText();
     
-    if(!cam.isStarted()) {
-        try {
-            cam.start();
-            println("Starting camera.");
-        } catch(Exception e) {
-            println("Can't start camera.");
+//    if(!cam.isStarted()) {
+//        try {
+//            cam.start();
+//            println("Starting camera.");
+//        } catch(Exception e) {
+//            println("Can't start camera.");
+//        }
+//    }
+}
+
+void drawLatestData() {
+    data.db.query("SELECT * from " + data.table + " WHERE sessionId='" + data.sessionId + "'");
+    
+    noFill();
+    
+    float radius = 5;
+    PVector prev = null;
+    
+    while(data.db.next()) {
+        PVector latLng = new PVector(data.db.getFloat("latitude"), data.db.getFloat("longitude"));
+        PVector pixelPos = map.getScreenLocation(latLng);
+        
+        if(prev != null) {
+            float angle = atan2(prev.y - pixelPos.y, prev.x - pixelPos.x);
+            float distance = PVector.dist(prev, pixelPos);
+            
+            pushMatrix();
+            
+            stroke(0);
+            
+            translate(pixelPos.x, pixelPos.y);
+            rotate(angle);
+            
+            stroke(0, 50);
+            ellipse(0, 0, radius * 2, radius * 2);
+            
+            stroke(0);
+            line(0, 0, radius, 0);
+            
+            stroke(0, 50);
+            line(0, 0, distance, 0);
+            
+            popMatrix();
         }
+        
+        prev = pixelPos;
     }
 }
 
