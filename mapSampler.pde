@@ -23,7 +23,7 @@ void setup() {
     noLoop();
     
     data = new DataStore("mapSamples", this);
-//    capturer = new Capturer(data, this);
+    capturer = new Capturer(data, this);
     
     map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
     mapBackground = loadImage("map-ciid.png");
@@ -37,26 +37,23 @@ void draw() {
 }
 
 void drawLatestData() {
-    data.db.query("SELECT * from " + data.table + " WHERE sessionId='" + data.sessionId + "'");
+    ArrayList<Sample> samples = data.getSamples(data.getLastSession());
+    PVector previousPosition = null;
+    float radius = 5;
     
     noFill();
     
-    float radius = 5;
-    PVector prev = null;
-    
-    while(data.db.next()) {
-        PVector latLng = new PVector(data.db.getFloat("latitude"), data.db.getFloat("longitude"));
-        PVector pixelPos = map.getScreenLocation(latLng);
+    for (Sample sample : samples) {
+        PVector pixelPosition = map.getScreenLocation(sample.position);
         
-        if(prev != null) {
-            float angle = atan2(prev.y - pixelPos.y, prev.x - pixelPos.x);
-            float distance = PVector.dist(prev, pixelPos);
+        if(previousPosition != null) {
+            float angle = atan2(previousPosition.y - pixelPosition.y, previousPosition.x - pixelPosition.x);
+            float distance = PVector.dist(previousPosition, pixelPosition);
             
             pushMatrix();
             
             stroke(0);
-            
-            translate(pixelPos.x, pixelPos.y);
+            translate(pixelPosition.x, pixelPosition.y);
             rotate(angle);
             
             stroke(0, 50);
@@ -67,11 +64,24 @@ void drawLatestData() {
             
             stroke(0, 50);
             line(0, 0, distance, 0);
-            
+        
             popMatrix();
         }
         
-        prev = pixelPos;
+        previousPosition = pixelPosition;
+    }
+    
+    for(int i = 0; i < samples.size() - 2; i++) {
+        Sample sample1 = samples.get(i);
+        Sample sample2 = samples.get(i + 1);
+        Sample sample3 = samples.get(i + 2);
+        
+        PVector pixelPosition1 = map.getScreenLocation(sample1.position);
+        PVector pixelPosition3 = map.getScreenLocation(sample3.position);
+        
+        stroke(255, 0, 0);
+        
+        line(pixelPosition1.x, pixelPosition1.y, pixelPosition3.x, pixelPosition3.y);
     }
 }
 

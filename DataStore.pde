@@ -50,6 +50,28 @@ class DataStore {
         sessionId = 0;
     }
     
+    ArrayList<Sample> getSamples(int sessionId) {
+        ArrayList<Sample> samples = new ArrayList();
+        
+        db.query("SELECT * from " + table + " WHERE sessionId='" + sessionId + "'");
+        
+        while (db.next()) {
+            int time = db.getInt("time");
+            PVector position = new PVector(db.getFloat("latitude"), db.getFloat("longitude"));
+            PVector acclerometer = new PVector(db.getFloat("acclerometerX"), db.getFloat("acclerometerY"), db.getFloat("acclerometerZ"));
+            
+            Sample sample = new Sample(time, sessionId, position, acclerometer);
+            
+            samples.add(sample);
+        }
+        
+        return samples;
+    }
+    
+    int getLastSession() {
+        return sessionId;
+    }
+    
     void store(int id, PVector position, PVector accelerometer) {
         String sql = "INSERT into " + table+ " ("+
             "`time`,"+
