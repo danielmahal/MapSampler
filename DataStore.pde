@@ -50,7 +50,7 @@ class DataStore {
         sessionId = 0;
     }
     
-    void store(PVector position, PVector accelerometer) {
+    void store(int id, PVector position, PVector accelerometer) {
         String sql = "INSERT into " + table+ " ("+
             "`time`,"+
             "`sessionId`,"+
@@ -61,7 +61,7 @@ class DataStore {
             "`accelerometerY`,"+
             "`accelerometerZ`"+
         ") VALUES (" +
-            "'" + System.currentTimeMillis() + "'," +
+            "'" + id + "'," +
             "'" + sessionId + "'," +
             "'" + position.x + "'," +
             "'" + position.y + "'," +
