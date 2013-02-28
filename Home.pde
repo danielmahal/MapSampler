@@ -1,14 +1,20 @@
 class Home {
     ArrayList<Integer> sessions;
-    ArrayList<SessionParticle> particles;
+    ArrayList<SessionParticle> particles = new ArrayList();
     
     Home(DataStore data) {
+        updateSessions();
+    }
+    
+    void updateSessions() {
         sessions = data.getSessions();
-        particles = new ArrayList();
+        particles.clear();
+        
+        println("Sessions: " + sessions.size());
         
         for(int i = 0; i < sessions.size(); i++) {
             int sessionId = sessions.get(i);
-            float angle = ((i+1) / sessions.size()) * TWO_PI;
+            float angle = (((float) i + 1) / sessions.size()) * TWO_PI;
             float distance = (min(width, height) / 2) - 50;
             float x = width / 2 + sin(angle) * distance;
             float y = height / 2 + cos(angle) * distance;
@@ -35,8 +41,16 @@ class Home {
     }
     
     void mousePressed() {
+        float centerDistance = PVector.dist(new PVector(width / 2, height / 2), new PVector(mouseX, mouseY));
+        
+        if(centerDistance < 100) {
+            showCapturer();
+            return;
+        }
+        
         for(SessionParticle particle : particles) {
             float distance = PVector.dist(particle.position, new PVector(mouseX, mouseY));
+            
             if(distance < 60) {
                 showSession(particle.sessionId);
                 break;

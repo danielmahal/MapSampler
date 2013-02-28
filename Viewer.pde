@@ -8,7 +8,7 @@ class Viewer {
     Viewer(int pSessionId, DataStore dataStore) {
         sessionId = pSessionId;
         data = dataStore;
-        samples = data.getSamples(data.getLastSession());
+        samples = data.getSamples(sessionId);
         map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
         mapBackground = loadImage("map-ciid.png");
     }

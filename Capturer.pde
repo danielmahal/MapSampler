@@ -1,5 +1,4 @@
 import android.content.Context;
-import apwidgets.*;
 import ketai.camera.*;
 import ketai.sensors.*;
 
@@ -8,10 +7,6 @@ class Capturer {
     KetaiSensor sensor;
     KetaiLocation location;
     KetaiCamera cam;
-
-    APWidgetContainer widgetContainer; 
-    APToggleButton recordButton;
-    APButton resetButton;
 
     boolean record = false;
     PVector position;
@@ -23,33 +18,41 @@ class Capturer {
         cam = new KetaiCamera(context, 1024, 768, 24);
         sensor = new KetaiSensor(context);
         location = new KetaiLocation(context);
-
-        recordButton = new APToggleButton(10, 10, 100, 50, "Record"); 
-        resetButton = new APButton(120, 10, 100, 50, "Reset");
-
-        widgetContainer = new APWidgetContainer(context);
-        widgetContainer.addWidget(recordButton); 
-        widgetContainer.addWidget(resetButton);
         
         cam.setSaveDirectory(imageFolder);
-        sensor.start();
-        location.start();
+    }
+    
+    boolean sensorsStarted() {
+        return sensor.isStarted() && position != null && cam.isStarted();
+    }
+    
+    void stopSensors() {
+        if(sensor.isStarted()) sensor.stop();
+        if(cam.isStarted()) cam.stop();
+    }
+    
+    void startSensors() {
+        image(cam, 10, 70, 160, 120); // Camera don't work without drawing first (ketai bug)
+        
+        if(!sensor.isStarted()) sensor.start();
+        if(position == null) location.start();
+        if(!cam.isStarted()) try { cam.start(); } catch(Exception e) {};
     }
     
     void draw() {
+        if(!sensorsStarted()) {
+            println("Sensors is not started. Start sensors");
+            startSensors();
+        }
+        
+        background(0);
         drawStatusText();
-
         image(cam, 10, 70, 160, 120);
         
-        if(!cam.isStarted()) {
-            try {
-                cam.start();
-                println("Starting camera.");
-            } 
-            catch(Exception e) {
-                println("Can't start camera.");
-            }
-        }
+        fill(255);
+        noStroke();
+        textAlign(RIGHT, BOTTOM);
+        text("End", width - 10, height - 10);
     }
 
     void drawStatusText() {
@@ -57,8 +60,7 @@ class Capturer {
 
         if (isRecording()) {
             status = "Capturing data\nSession id:" + data.sessionId;
-        } 
-        else {
+        } else {
             status = "Not capturing data";
 
             if (record && position == null) status += "\n" + "Waiting for position";
@@ -66,7 +68,7 @@ class Capturer {
             if (record && !cam.isStarted()) status += "\n" + "Waiting for camera";
         }
 
-        fill(0);
+        fill(255);
         noStroke();
         textSize(22);
         textAlign(LEFT, BOTTOM);
@@ -97,26 +99,17 @@ class Capturer {
     void stopRecording() {
         record = false;
     }
+    
+    void mousePressed() {
+        if(mouseX > width - 120 && mouseY > height - 100) {
+            stopRecording();
+            stopSensors();
+            showHome();
+        }
+    }
 
     void onCameraPreviewEvent() {
         cam.read();
-    }
-
-    void onClickWidget(APWidget widget) {
-        if (widget == recordButton) { 
-            if (recordButton.isChecked()) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        }
-
-        if (widget == resetButton) {
-            println("Reset button clicked");
-            recordButton.setChecked(false);
-            stopRecording();
-            data.reset();
-        }
     }
 
     void onAccelerometerEvent(float x, float y, float z, long time, int accuracy) {
@@ -132,10 +125,6 @@ class Capturer {
             data.store(id, position, accelerometer);
             saveImage(Integer.toString(id));
         }
-    }
-    
-    void someFunction() {
-        println("SOME FUNCTION");
     }
     
     void exit() {

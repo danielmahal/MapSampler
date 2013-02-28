@@ -1,7 +1,6 @@
 // map.png: 12.536, 55.6970, 12.5496, 55.7015
 // map-ciid.png: 12.5915,55.6820,12.6021,55.6855
 
-import apwidgets.*;
 import ketai.camera.*;
 import ketai.sensors.*;
 
@@ -20,13 +19,12 @@ Home home;
 int section = HOME; 
 
 void setup() {
-    size(displayWidth, displayHeight);
-    frameRate(24);
+    size(displayWidth, displayHeight, OPENGL);
+    frameRate(60);
     orientation(LANDSCAPE);
     
     data = new DataStore("mapSamples", this);
-//    capturer = new Capturer(data, this);
-//    viewer = new Viewer(1, data);
+    capturer = new Capturer(data, this);
     home = new Home(data);
 }
 
@@ -34,7 +32,7 @@ void draw() {
     if(section == HOME) {
         home.draw();
     } else if(section == CAPTURER) {
-//        capturer.draw();
+        capturer.draw();
     } else if(section == VIEWER) {
         viewer.draw();
     }
@@ -44,13 +42,19 @@ void mousePressed() {
     if(section == HOME) {
         home.mousePressed();
     } else if(section == CAPTURER) {
-//        capturer.mousePressed();
+        capturer.mousePressed();
     } else if(section == VIEWER) {
         viewer.mousePressed();
     }
 }
 
+void showCapturer() {
+    capturer.startRecording();
+    section = CAPTURER;
+}
+
 void showHome() {
+    home.updateSessions();
     section = HOME;
 }
 
@@ -61,10 +65,6 @@ void showSession(int sessionId) {
 
 void onCameraPreviewEvent() {
     capturer.onCameraPreviewEvent();
-}
-
-void onClickWidget(APWidget widget) {
-    capturer.onClickWidget(widget);
 }
 
 void onAccelerometerEvent(float x, float y, float z, long time, int accuracy) {
