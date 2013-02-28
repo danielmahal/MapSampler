@@ -20,10 +20,10 @@ void setup() {
     size(displayWidth, displayHeight);
     frameRate(24);
     orientation(LANDSCAPE);
-    noLoop();
+//    noLoop();
     
     data = new DataStore("mapSamples", this);
-    capturer = new Capturer(data, this);
+//    capturer = new Capturer(data, this);
     
     map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
     mapBackground = loadImage("map-ciid.png");
@@ -113,7 +113,9 @@ void onAccelerometerEvent(float x, float y, float z, long time, int accuracy) {
 }
 
 void onLocationEvent(double latitude, double longitude, double altitude) {
-    capturer.onLocationEvent(latitude, longitude, altitude);
+    if(capturer != null) {
+        capturer.onLocationEvent(latitude, longitude, altitude);
+    }
 }
 
 void exit() {

@@ -28,18 +28,18 @@ class Capturer {
         widgetContainer = new APWidgetContainer(context);
         widgetContainer.addWidget(recordButton); 
         widgetContainer.addWidget(resetButton);
-
-        sensor.start();
+        
         cam.setSaveDirectory(imageFolder);
+        sensor.start();
+        location.start();
     }
     
     void draw() {
         drawStatusText();
 
-        if (cam.isStarted()) {
-            image(cam, 10, 70, 160, 120);
-        } 
-        else {
+        image(cam, 10, 70, 160, 120);
+        
+        if(!cam.isStarted()) {
             try {
                 cam.start();
                 println("Starting camera.");
@@ -104,10 +104,8 @@ class Capturer {
         if (widget == recordButton) { 
             if (recordButton.isChecked()) {
                 startRecording();
-            }
-            
-            else {
-                startRecording();
+            } else {
+                stopRecording();
             }
         }
 
@@ -132,6 +130,10 @@ class Capturer {
             data.store(id, position, accelerometer);
             saveImage(Integer.toString(id));
         }
+    }
+    
+    void someFunction() {
+        println("SOME FUNCTION");
     }
     
     void exit() {
