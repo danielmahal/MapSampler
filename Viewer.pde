@@ -1,6 +1,7 @@
 class Viewer {
     int sessionId;
     ArrayList<Sample> samples;
+    ArrayList<MapShape> mapShapes;
     DataStore data;
     MercatorMap map;
     
@@ -14,6 +15,8 @@ class Viewer {
         map = createMap(width, height, bounds[0], bounds[1], bounds[2], bounds[3]);
         
         samples = cleanSamples(samples, 20);
+        
+        mapShapes = calculateMapShapes(samples);
     }
     
     float[] getBounds(ArrayList<Sample> samples) {
@@ -50,16 +53,78 @@ class Viewer {
         return cleanedSamples;
     }
     
+    ArrayList<MapShape> calculateMapShapes(ArrayList<Sample> samples) {
+        ArrayList<MapShape> mapShapes = new ArrayList();
+        ArrayList<PVector> seperatorPoints = new ArrayList();
+        ArrayList<Float> seperatorAngles = new ArrayList();
+        
+        for(int i = 0; i < samples.size() - 2; i++) {
+            Sample sample1 = samples.get(i);
+            Sample sample2 = samples.get(i + 1);
+            Sample sample3 = samples.get(i + 2);
+            
+            PVector pixelPosition1 = map.getScreenLocation(sample1.position);
+            PVector pixelPosition2 = map.getScreenLocation(sample2.position);
+            PVector pixelPosition3 = map.getScreenLocation(sample3.position);
+            
+            float angle = atan2(pixelPosition3.y - pixelPosition1.y, pixelPosition3.x - pixelPosition1.x);
+            
+            seperatorPoints.add(pixelPosition2);
+            seperatorAngles.add(angle + HALF_PI);
+        }
+        
+        for(int i = 0; i < seperatorPoints.size() - 1; i++) {
+            PVector point1 = seperatorPoints.get(i);
+            PVector point2 = seperatorPoints.get(i + 1);
+            float angle1 = seperatorAngles.get(i);
+            float angle2 = seperatorAngles.get(i + 1);
+            
+            mapShapes.add(new MapShape(point1, point2, angle1, angle2));
+        }
+        
+        return mapShapes;
+    }
     
     void draw() {
+        background(255);
+        
+        for(MapShape mapShape : mapShapes) {
+            colorMode(HSB);
+            fill(mapShape.fillColor, 127, 127);
+            colorMode(RGB);
+            noStroke();
+            
+            beginShape();
+            
+            for(PVector point : mapShape.points) {
+                vertex(point.x, point.y);
+            }
+            
+            vertex(mapShape.points.get(0).x, mapShape.points.get(0).y);
+            vertex(mapShape.points.get(1).x, mapShape.points.get(1).y);
+            vertex(mapShape.points.get(3).x, mapShape.points.get(3).y);
+            vertex(mapShape.points.get(2).x, mapShape.points.get(2).y);
+            endShape(CLOSE);
+            
+            stroke(0, 255, 0);
+            fill(255);
+            ellipse(mapShape.points.get(2).x, mapShape.points.get(2).y, 20, 20);
+            ellipse(mapShape.points.get(3).x, mapShape.points.get(3).y, 20, 20);
+        }
+        
+        fill(0);
+        noStroke();
+        textAlign(LEFT, TOP);
+        text("Back", 10, 10);
+    }
+    
+    void drawDebugSamples() {
         PVector previousPosition = null;
         float radius = 5;
         
-        background(255);
-        
         noFill();
         
-        for (Sample sample : samples) {
+        for(Sample sample : samples) {
             PVector pixelPosition = map.getScreenLocation(sample.position);
             
             if(previousPosition != null) {
@@ -86,35 +151,6 @@ class Viewer {
             
             previousPosition = pixelPosition;
         }
-        
-        for(int i = 0; i < samples.size() - 2; i++) {
-            Sample sample1 = samples.get(i);
-            Sample sample2 = samples.get(i + 1);
-            Sample sample3 = samples.get(i + 2);
-            
-            PVector pixelPosition1 = map.getScreenLocation(sample1.position);
-            PVector pixelPosition2 = map.getScreenLocation(sample2.position);
-            PVector pixelPosition3 = map.getScreenLocation(sample3.position);
-            
-            float angle = atan2(pixelPosition3.y - pixelPosition1.y, pixelPosition3.x - pixelPosition1.x);
-            float distance = PVector.dist(pixelPosition1, pixelPosition3);
-            
-            stroke(255, 255, 0);
-            
-            line(pixelPosition1.x, pixelPosition1.y, pixelPosition3.x, pixelPosition3.y);
-            
-            stroke(255, 0, 0, 30);
-            pushMatrix();
-            translate(pixelPosition2.x, pixelPosition2.y);
-            rotate(angle + HALF_PI);
-            line(0, 0, 1000, 0);
-            popMatrix();
-        }
-        
-        fill(0);
-        noStroke();
-        textAlign(LEFT, TOP);
-        text("Back", 10, 10);
     }
     
     void mousePressed() {
