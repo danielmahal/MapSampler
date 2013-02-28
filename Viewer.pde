@@ -3,21 +3,37 @@ class Viewer {
     ArrayList<Sample> samples;
     DataStore data;
     MercatorMap map;
-    PImage mapBackground;
     
     Viewer(int pSessionId, DataStore dataStore) {
         sessionId = pSessionId;
         data = dataStore;
         samples = data.getSamples(sessionId);
-        map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
-        mapBackground = loadImage("map-ciid.png");
+        
+        float[] bounds = getBounds();
+        map = createMap(width, height, bounds[0], bounds[1], bounds[2], bounds[3]);
+    }
+    
+    float[] getBounds() {
+        float latMin = 90;
+        float latMax = 0;
+        float lngMin = 180;
+        float lngMax = -180;
+        
+        for(Sample sample : samples) {
+            latMin = min(latMin, sample.position.y);
+            latMax = max(latMax, sample.position.y);
+            lngMin = min(lngMin, sample.position.x);
+            lngMax = max(lngMax, sample.position.x);
+        }
+        
+        return new float[] {latMin, lngMin, latMax, lngMax};
     }
     
     void draw() {
         PVector previousPosition = null;
         float radius = 5;
         
-        image(mapBackground, 0, 0);
+        background(255);
         
         noFill();
         
