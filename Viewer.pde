@@ -7,13 +7,16 @@ class Viewer {
     Viewer(int pSessionId, DataStore dataStore) {
         sessionId = pSessionId;
         data = dataStore;
+        
         samples = data.getSamples(sessionId);
         
-        float[] bounds = getBounds();
+        float[] bounds = getBounds(samples);
         map = createMap(width, height, bounds[0], bounds[1], bounds[2], bounds[3]);
+        
+        samples = cleanSamples(samples, 20);
     }
     
-    float[] getBounds() {
+    float[] getBounds(ArrayList<Sample> samples) {
         float latMin = 90;
         float latMax = 0;
         float lngMin = 180;
@@ -28,6 +31,25 @@ class Viewer {
         
         return new float[] {latMin, lngMin, latMax, lngMax};
     }
+    
+    ArrayList<Sample> cleanSamples(ArrayList<Sample> dirtySamples, float minDistance) {
+        Sample previous = dirtySamples.get(0);
+        ArrayList<Sample> cleanedSamples = new ArrayList();
+                
+        for (Sample dirtySample : dirtySamples) {
+            PVector previousPosition = map.getScreenLocation(previous.position);
+            PVector samplePosition = map.getScreenLocation(dirtySample.position);
+            float distance = PVector.dist(previousPosition, samplePosition);
+            
+            if (distance > minDistance) {
+                previous = dirtySample;
+                cleanedSamples.add(dirtySample);
+            }
+        }
+    
+        return cleanedSamples;
+    }
+    
     
     void draw() {
         PVector previousPosition = null;
