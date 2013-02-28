@@ -14,6 +14,8 @@ class Capturer {
     APButton resetButton;
 
     boolean record = false;
+    PVector position;
+    PVector accelerometer;
 
     Capturer(DataStore dataStore, PApplet context) {
         data = dataStore;

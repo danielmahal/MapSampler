@@ -5,99 +5,58 @@ import apwidgets.*;
 import ketai.camera.*;
 import ketai.sensors.*;
 
+final int HOME = 0;
+final int CAPTURER = 1;
+final int VIEWER = 2;
+
 final String picturePath = "//sdcard/Pictures";
 final String imageFolder = "mapSamplerPictures";
 
-MercatorMap map;
 DataStore data;
 Capturer capturer;
+Viewer viewer;
+Home home;
 
-PVector position;
-PVector accelerometer;
-PImage mapBackground;
+int section = HOME; 
 
 void setup() {
     size(displayWidth, displayHeight);
     frameRate(24);
     orientation(LANDSCAPE);
-//    noLoop();
     
     data = new DataStore("mapSamples", this);
 //    capturer = new Capturer(data, this);
-    
-    map = createMap(width, height, 12.5915, 55.6820, 12.6021, 55.6855);
-    mapBackground = loadImage("map-ciid.png");
+//    viewer = new Viewer(1, data);
+    home = new Home(data);
 }
 
 void draw() {
-    image(mapBackground, 0, 0);
-    drawLatestData();
-    
-//    capturer.draw();
-}
-
-void drawLatestData() {
-    ArrayList<Sample> samples = data.getSamples(data.getLastSession());
-    PVector previousPosition = null;
-    float radius = 5;
-    
-    noFill();
-    
-    for (Sample sample : samples) {
-        PVector pixelPosition = map.getScreenLocation(sample.position);
-        
-        if(previousPosition != null) {
-            float angle = atan2(previousPosition.y - pixelPosition.y, previousPosition.x - pixelPosition.x);
-            float distance = PVector.dist(previousPosition, pixelPosition);
-            
-            pushMatrix();
-            
-            stroke(0);
-            translate(pixelPosition.x, pixelPosition.y);
-            rotate(angle);
-            
-            stroke(0, 50);
-            ellipse(0, 0, radius * 2, radius * 2);
-            
-            stroke(0);
-            line(0, 0, radius, 0);
-            
-            stroke(0, 50);
-            line(0, 0, distance, 0);
-        
-            popMatrix();
-        }
-        
-        previousPosition = pixelPosition;
-    }
-    
-    for(int i = 0; i < samples.size() - 2; i++) {
-        Sample sample1 = samples.get(i);
-        Sample sample2 = samples.get(i + 1);
-        Sample sample3 = samples.get(i + 2);
-        
-        PVector pixelPosition1 = map.getScreenLocation(sample1.position);
-        PVector pixelPosition2 = map.getScreenLocation(sample2.position);
-        PVector pixelPosition3 = map.getScreenLocation(sample3.position);
-        
-        float angle = atan2(pixelPosition3.y - pixelPosition1.y, pixelPosition3.x - pixelPosition1.x);
-        float distance = PVector.dist(pixelPosition1, pixelPosition3);
-        
-        stroke(255, 255, 0);
-        
-        line(pixelPosition1.x, pixelPosition1.y, pixelPosition3.x, pixelPosition3.y);
-        
-        stroke(255, 0, 0, 30);
-        pushMatrix();
-        translate(pixelPosition2.x, pixelPosition2.y);
-        rotate(angle + HALF_PI);
-        line(0, 0, 1000, 0);
-        popMatrix();
+    if(section == HOME) {
+        home.draw();
+    } else if(section == CAPTURER) {
+//        capturer.draw();
+    } else if(section == VIEWER) {
+        viewer.draw();
     }
 }
 
-MercatorMap createMap(int w, int h, float leftLon, float bottomLat, float rightLon, float topLat) {
-    return new MercatorMap(w, h, topLat, bottomLat, leftLon, rightLon);
+void mousePressed() {
+    if(section == HOME) {
+        home.mousePressed();
+    } else if(section == CAPTURER) {
+//        capturer.mousePressed();
+    } else if(section == VIEWER) {
+        viewer.mousePressed();
+    }
+}
+
+void showHome() {
+    section = HOME;
+}
+
+void showSession(int sessionId) {
+    viewer = new Viewer(sessionId, data);
+    section = VIEWER;
 }
 
 void onCameraPreviewEvent() {

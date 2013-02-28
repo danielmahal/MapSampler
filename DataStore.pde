@@ -68,6 +68,19 @@ class DataStore {
         return samples;
     }
     
+    ArrayList<Integer> getSessions() {
+        ArrayList<Integer> sessions = new ArrayList();
+        String sql = "SELECT sessionId from " + table + " GROUP BY sessionId ORDER BY sessionId";
+        
+        db.query(sql);
+        
+        while(db.next()) {
+            sessions.add(db.getInt("sessionId"));
+        }
+        
+        return sessions;
+    }
+    
     int getLastSession() {
         return sessionId;
     }
